@@ -1,13 +1,15 @@
 class Mote extends Entity{
-    constructor(position, radius, texture){
-        const model = new Model(position, generateSphereVertices(radius, 10), radius, { texture: texture, alpha: 0.95 });
+    constructor(position, radius, texture, options = {}){
+        const detail = options.detail || 10;
+        const model = new Model(position, generateSphereVertices(radius, detail), radius, { texture: texture, alpha: 0.95 });
         super(model, radius);
+        const speed = options.speed || 2;
         this.velocity = [
-            (Math.random() - 0.5) * 2,
-            (Math.random() - 0.5) * 2,
-            (Math.random() - 0.5) * 2
+            (Math.random() - 0.5) * speed,
+            (Math.random() - 0.5) * speed,
+            (Math.random() - 0.5) * speed
         ];
-        this.drag = 0.98;
+        this.drag = options.drag || 0.98;
     }
 
     update(delta, boundaryRadius){
@@ -51,11 +53,13 @@ function spheresIntersect(p1, r1, p2, r2){
     return length(subtract(p1, p2)) < (r1 + r2 + 0.1);
 }
 
-function createMoteField(count, worldRadius, playerRadius, texture, playerPosition){
+function createMoteField(count, worldRadius, playerRadius, texture, playerPosition, radiusRange = [0.4, 1.6], options = {}){
     const motes = [];
+    const minRadius = radiusRange[0];
+    const maxRadius = radiusRange[1];
     let attempts = 0;
     while(motes.length < count && attempts < count * 100){
-        const radius = 0.4 + Math.random() * 1.6;
+        const radius = minRadius + Math.random() * (maxRadius - minRadius);
         const position = randomPosition(radius, worldRadius - 2);
         if(playerPosition && spheresIntersect(position, radius, playerPosition, playerRadius)){
             attempts++;
@@ -69,7 +73,7 @@ function createMoteField(count, worldRadius, playerRadius, texture, playerPositi
             }
         }
         if(ok){
-            motes.push(new Mote(position, radius, texture));
+            motes.push(new Mote(position, radius, texture, options));
         }
         attempts++;
     }

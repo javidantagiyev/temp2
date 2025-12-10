@@ -57,7 +57,7 @@ var skybox;
 var enemyTexture;
 var playerTexture;
 var cosmosTexture;
-var worldRadius = 25;
+var worldRadius = 60;
 var lightOrbitAngle = 0;
 var GAME_OVER = false;
 
@@ -141,7 +141,9 @@ function init() {
     player = new Player([0.0, -2.0, 5.0], new Model([0.0, -2.0, 5.0], generateSphereVertices(playerRadius, 14), playerRadius, { texture: playerTexture, alpha: 0.9, isPlayer: true }));
 
     skybox = createSkybox(worldRadius + 2.0, cosmosTexture);
-    motes = createMoteField(15, worldRadius, player.model.radius, enemyTexture, player.model.position);
+    const planetRadiusRange = [1.8, 3.5];
+    const planetOptions = { speed: 0.6, drag: 0.995, detail: 14 };
+    motes = createMoteField(12, worldRadius, player.model.radius, enemyTexture, player.model.position, planetRadiusRange, planetOptions);
 
     window.requestAnimationFrame(game);
 }

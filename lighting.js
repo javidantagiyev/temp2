@@ -14,7 +14,7 @@ var viewerLocation;
 
 var centerLocation;
 
-var lightOrbitRadius = 18.0;
+var lightOrbitRadius = 40.0;
 var lightOrbitSpeed = 0.5;
 
 function initLighting(){
@@ -46,7 +46,7 @@ class LightSource{
 
     constructor(position, color, model){
         this.position = position;
-        this.color - color;
+        this.color = color;
         this.model = model;
     }
 
