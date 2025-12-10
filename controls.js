@@ -1,21 +1,31 @@
+var activeKeys = new Set();
+
 function keyContols(e){
-    if(e.key == 'w'){
-        player.moveForward(deltaTime);
+    activeKeys.add(e.key);
+}
+
+function releaseControls(e){
+    activeKeys.delete(e.key);
+}
+
+function updateControls(delta){
+    if(activeKeys.has('w')){
+        player.accelerateForward(delta);
     }
-    if(e.key == 'a'){
-        player.moveLeft(deltaTime);
+    if(activeKeys.has('a')){
+        player.accelerateLeft(delta);
     }
-    if(e.key == 's'){
-        player.moveBack(deltaTime);
+    if(activeKeys.has('s')){
+        player.accelerateBack(delta);
     }
-    if(e.key == 'd'){
-        player.moveRight(deltaTime);
+    if(activeKeys.has('d')){
+        player.accelerateRight(delta);
     }
-    if(e.key == ' '){ // It is space button
-        player.move(0.0, player.speed * deltaTime, 0.0);
+    if(activeKeys.has(' ')){ // It is space button
+        player.accelerateVertical(delta);
     }
-    if(e.key == 'Shift'){
-        player.move(0.0, -player.speed * deltaTime, 0.0);
+    if(activeKeys.has('Shift')){
+        player.decelerateVertical(delta);
     }
 }
 
