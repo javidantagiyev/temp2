@@ -14,28 +14,19 @@ var viewerLocation;
 
 var centerLocation;
 
-var lightOrbitRadius = 40.0;
-var lightOrbitSpeed = 0.5;
-
 function initLighting(){
     ambient = new Float32Array([0.1, 0.1, 0.1]);
     ambientLocation = gl.getUniformLocation(program, "uAmbient");
     centerLocation = gl.getUniformLocation(program, "uCenter");
 
     lightPos = new Float32Array([0.0, 2.0, -10.0]);
-    lightColor = new Float32Array([0.9, 0.9, 0.8]);
+    lightColor = new Float32Array([0.5, 0.5, 0.0]);
     lightPosLocation = gl.getUniformLocation(program, "uLightPosition");
     lightColorLocation = gl.getUniformLocation(program, "uLightColor");
 
     shininess = 50.0;
     shininessLocation = gl.getUniformLocation(program, "uShininess");
     viewerLocation = gl.getUniformLocation(program, "uViewerPosition");
-}
-
-function updateLightOrbit(delta){
-    lightOrbitAngle += lightOrbitSpeed * delta;
-    lightPos[0] = Math.cos(lightOrbitAngle) * lightOrbitRadius;
-    lightPos[2] = Math.sin(lightOrbitAngle) * lightOrbitRadius;
 }
 
 
@@ -46,7 +37,7 @@ class LightSource{
 
     constructor(position, color, model){
         this.position = position;
-        this.color = color;
+        this.color - color;
         this.model = model;
     }
 

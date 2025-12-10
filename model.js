@@ -14,7 +14,7 @@ class Model{
     rotateY;
     rotateZ;
     
-    constructor(position, vertices, radius = 1.0, options = {}){
+    constructor(position, vertices){
         this.vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
@@ -27,16 +27,10 @@ class Model{
         this.worldMatrix = mat4();
         this.vertexCount = vertices.length / 3;
         this.position = position;
-        this.baseRadius = radius;
-        this.radius = radius;
         this.scaleFactor = 1.0;
         this.rotateX = 0.0;
         this.rotateY = 0.0;
         this.rotateZ = 0.0;
-        this.texture = options.texture || null;
-        this.alpha = options.alpha || 1.0;
-        this.isSkybox = options.isSkybox || false;
-        this.isPlayer = options.isPlayer || false;
     }
     
     bind(){
@@ -77,11 +71,9 @@ class Model{
     scale(s){
         // console.log("works");
         this.scaleFactor *= s;
-        this.radius = this.baseRadius * this.scaleFactor;
     }
 
     setSize(s){
-        this.scaleFactor = s / this.baseRadius;
-        this.radius = s;
+        this.scaleFactor = s;
     }
 }
