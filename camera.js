@@ -36,7 +36,7 @@ class Camera{
     MAX_DISTANCE = 10;
     MIN_DISTANCE = 0.1;
 
-    constructor(cameraPos, cameraTarget, fov, near, far, sensitivity = 0.05, distance = 5){
+    constructor(cameraPos, cameraTarget, fov, near, far, sensitivity = 0.6, distance = 1){
         // View
         this.position = cameraPos;
         this.cameraUp = [0.0, 1.0, 0.0];

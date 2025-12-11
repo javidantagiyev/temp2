@@ -12,7 +12,7 @@ class Player{
     model;
     camera;
 
-    constructor(position, model, speed = 10){
+    constructor(position, model, speed = 40){
         this.model = model;
         this.position = position;
         model.setPosition(position[0], position[1], position[2]);
@@ -21,7 +21,7 @@ class Player{
         this.fov = 90;
         this.camera = new Camera(cameraPos, cameraTarget, this.fov, 0.1, 1000);
         this.speed = speed;
-        this.mass = Math.pow(this.model.getRadius(), 3);
+        this.mass = Math.pow(this.model.getRadius(), 5);
     }
 
     get radius(){
