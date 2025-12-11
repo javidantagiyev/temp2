@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- 
-    CSCI 2408 Computer Graphics Fall 2025 
-    (c)2025 by Name Surname 
+<!--
+    CSCI 2408 Computer Graphics Fall 2025
+    (c)2025 by Name Surname
     Submitted in partial fulfillment of the requirements of the course.
 -->
 <html>
@@ -14,16 +14,23 @@
 
     varying vec3 vNormal;
     varying vec3 vFragPos;
+    varying vec2 vTexCoord;
 
     uniform mat4 uCTM;
     uniform vec3 uCenter;
     uniform mat4 uWorld;
+
+    const float PI = 3.141592653589793;
 
     void main() {
         // Just use the vertex as is.
         gl_Position = uCTM * vec4(aPosition, 1.0);
         vFragPos = vec3(uWorld * vec4(aPosition, 1.0));
         vNormal = normalize(vFragPos - uCenter);
+
+        float u = atan(vNormal.z, vNormal.x) / (2.0 * PI) + 0.5;
+        float v = vNormal.y * 0.5 + 0.5;
+        vTexCoord = vec2(u, v);
     }
 </script>
 
@@ -33,15 +40,17 @@
 
     varying vec3 vNormal;
     varying vec3 vFragPos;
+    varying vec2 vTexCoord;
 
     uniform vec3 uAmbient;
     uniform vec3 uLightPosition;
     uniform vec3 uLightColor;
     uniform vec3 uViewerPosition;
     uniform float uShininess;
+    uniform sampler2D uTexture;
+    uniform bool uUseTexture;
 
     void main() {
-        // vec3(0.0, 0.0, 0.0);
         vec3 lightDirect = normalize(uLightPosition - vFragPos);
         vec3 viewDirect = normalize(uViewerPosition - vFragPos);
 
@@ -51,10 +60,14 @@
         vec3 reflectDirect = reflect(-lightDirect, viewDirect);
         float specular = pow(max(dot(viewDirect, reflectDirect), 0.0), uShininess);
         vec3 specularVec = specular*uLightColor;
-        vec3 result = (uAmbient + diffuseVec + specularVec);
+        vec3 lighting = (uAmbient + diffuseVec + specularVec);
 
-        gl_FragColor = vec4((result * vec3(1.0, 0.5, 0.0)), 1.0);
-        // Just use one color.
+        vec3 baseColor = vec3(1.0, 0.5, 0.0);
+        if(uUseTexture){
+            baseColor = texture2D(uTexture, vTexCoord).rgb;
+        }
+
+        gl_FragColor = vec4(lighting * baseColor, 1.0);
     }
 </script>
 
@@ -98,19 +111,21 @@
     <script type="text/javascript" src="controls.js"></script>
     <script type="text/javascript" src="renderer.js"></script>
     <script type="text/javascript" src="lighting.js"></script>
+    <script type="text/javascript" src="textures.js"></script>
+    <script type="text/javascript" src="enemies.js"></script>
     <script type="text/javascript" src="skybox.js"></script>
     <script type="text/javascript" src="osmos3d-team03.js"></script>
 </head>
 
 <body style="background-color: #888888;">
 
-    <img id="px" src="skybox_image.jpg" width="0" height="0">
-    <img id="nx" src="skybox_image.jpg" width="0" height="0">
-    <img id="py" src="skybox_image.jpg" width="0" height="0">
-    <img id="ny" src="skybox_image.jpg" width="0" height="0">
-    <img id="pz" src="skybox_image.jpg" width="0" height="0">
-    <img id="nz" src="skybox_image.jpg" width="0" height="0">
-    
+    <img id="px" src="textures/galaxy.png" width="0" height="0">
+    <img id="nx" src="textures/galaxy.png" width="0" height="0">
+    <img id="py" src="textures/galaxy.png" width="0" height="0">
+    <img id="ny" src="textures/galaxy.png" width="0" height="0">
+    <img id="pz" src="textures/galaxy.png" width="0" height="0">
+    <img id="nz" src="textures/galaxy.png" width="0" height="0">
+
     <center>
         <canvas id="gl-canvas" width="1200" height="700">
             Sorry ... your browser doesn't support the HTML5 canvas element.
