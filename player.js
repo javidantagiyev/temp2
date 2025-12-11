@@ -21,7 +21,7 @@ class Player{
         this.fov = 90;
         this.camera = new Camera(cameraPos, cameraTarget, this.fov, 0.1, 1000);
         this.speed = speed;
-        this.mass = Math.pow(this.model.getRadius(), 5);
+        this.mass = Math.pow(this.model.getRadius(), 3);
     }
 
     get radius(){
