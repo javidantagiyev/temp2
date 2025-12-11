@@ -183,7 +183,11 @@ function handleCollisions(){
         if(dist <= enemy.radius + player.radius){
             if(player.mass >= enemy.mass){
                 player.grow(enemy.mass);
-                respawnEnemy(enemy);
+
+                // Optinally respawn enemy or remove it
+                
+                // respawnEnemy(enemy);
+                removeEnemy(enemy);
                 updateEnemyTextures();
             } else {
                 clearInterval(gameLoopHandle);
@@ -200,6 +204,15 @@ function respawnEnemy(enemy){
     const texture = getEnemyTextureForMass(newMass);
     enemy.respawn(newPosition, newRadius, texture);
 }
+
+function removeEnemy(enemy){
+    const index = enemies.indexOf(enemy);
+
+    if(index !== -1){
+        enemies.splice(index, 1);
+    }
+}
+
 
 function getEnemyTextureForMass(enemyMass){
     if(enemyMass > player.mass){
