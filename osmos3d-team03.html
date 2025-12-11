@@ -81,7 +81,8 @@
 
     void main() {
         vDir = mat3(uView) * position;  // remove translation
-        gl_Position = uProjection * vec4(position, 1.0);
+        mat4 viewRotation = mat4(mat3(uView));
+        gl_Position = uProjection * viewRotation * vec4(position, 1.0);
 
         // Move depth to far plane
         gl_Position.z = gl_Position.w;

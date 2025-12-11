@@ -94,6 +94,8 @@ function init() {
     playerTexture = loadTexture(gl, "textures/player.png");
     enemyBigTexture = loadTexture(gl, "textures/enemybig.png");
     enemySmallTexture = loadTexture(gl, "textures/enemysmall.png");
+    skyboxTexture = loadCubemap(gl, "textures/galaxy.png"); //NOT WORKING PROPERLY
+
 
     const playerModel = new Model([0.0, 0.0, 5.0], generateSphereVertices(0.5, 10), 0.5);
     playerModel.texture = playerTexture;
