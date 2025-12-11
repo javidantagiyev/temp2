@@ -44,7 +44,8 @@ var worldNormalMatrixLocation;
 var player;
 var enemies = [];
 var playerTexture;
-var enemyTexture;
+var enemyBigTexture;
+var enemySmallTexture;
 var gameLoopHandle;
 
 function init() {
@@ -91,7 +92,8 @@ function init() {
     gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
 
     playerTexture = loadTexture(gl, "textures/player.png");
-    enemyTexture = loadTexture(gl, "textures/enemy.png");
+    enemyBigTexture = loadTexture(gl, "textures/enemybig.png");
+    enemySmallTexture = loadTexture(gl, "textures/enemysmall.png");
 
     const playerModel = new Model([0.0, 0.0, 5.0], generateSphereVertices(0.5, 10), 0.5);
     playerModel.texture = playerTexture;
@@ -152,7 +154,9 @@ function spawnEnemies(count){
     for(let i = 0; i < count; i++){
         const radius = randomRange(0.2, 2.0);
         const position = randomPosition(radius + 5.0);
-        const enemy = new Enemy(position, radius, enemyTexture);
+        const enemyMass = Math.pow(radius, 3);
+        const texture = getEnemyTextureForMass(enemyMass);
+        const enemy = new Enemy(position, radius, texture);
         enemies.push(enemy);
     }
 }
@@ -180,6 +184,7 @@ function handleCollisions(){
             if(player.mass >= enemy.mass){
                 player.grow(enemy.mass);
                 respawnEnemy(enemy);
+                updateEnemyTextures();
             } else {
                 clearInterval(gameLoopHandle);
                 alert("Game Over! The enemy was too big to absorb.");
@@ -191,9 +196,22 @@ function handleCollisions(){
 function respawnEnemy(enemy){
     const newRadius = randomRange(0.2, 2.0);
     const newPosition = randomPosition(newRadius + player.radius + 2.0);
-    enemy.baseRadius = newRadius;
-    enemy.mass = Math.pow(newRadius, 3);
-    enemy.model = new Model(newPosition, generateSphereVertices(newRadius, 10), newRadius);
-    enemy.model.texture = enemyTexture;
-    enemy.model.setPosition(newPosition[0], newPosition[1], newPosition[2]);
+    const newMass = Math.pow(newRadius, 3);
+    const texture = getEnemyTextureForMass(newMass);
+    enemy.respawn(newPosition, newRadius, texture);
+}
+
+function getEnemyTextureForMass(enemyMass){
+    if(enemyMass > player.mass){
+        return enemyBigTexture;
+    }
+
+    return enemySmallTexture;
+}
+
+function updateEnemyTextures(){
+    enemies.forEach(enemy => {
+        const texture = getEnemyTextureForMass(enemy.mass);
+        enemy.setTexture(texture);
+    });
 }
