@@ -1,6 +1,6 @@
 /*
-CSCI 2408 Computer Graphics Fall 2025 
-(c)2025 by Name Surname 
+CSCI 2408 Computer Graphics Fall 2025
+(c)2025 by Name Surname
 Submitted in partial fulfillment of the requirements of the course.
 */
 
@@ -17,7 +17,7 @@ var mousey;
 var delay = 0;
 
 // Time
-var delta = 0;
+var deltaTime = 0;
 var crntFrameTime = 0;
 var prevFrameTime = 0;
 
@@ -27,6 +27,8 @@ var skyboxProgram;
 
 // Texturing
 var cubemap;
+var textureLocation;
+var useTextureLocation;
 
 var posAttribLocation;
 var colorAttribLocation;
@@ -39,30 +41,11 @@ var worldNormalMatrixLocation;
 
 
 // Game
-var box;
-var triangle;
-var triangle1;
-var sphereModel;
-var camera;
 var player;
-var sphere;
-var cube;
-
-// Triangle
-var triangleVertices = 
-[
-    0.0, 0.5, -0.5,
-    -0.5, -0.5, -0.5,
-    0.5, -0.5, -0.5
-];
-
-var triangleColors = 
-[
-    1.0, 0.0, 0.0,
-    0.0, 1.0, 0.0,
-    0.0, 0.0, 1.0
-];
-
+var enemies = [];
+var playerTexture;
+var enemyTexture;
+var gameLoopHandle;
 
 function init() {
     // Get reference to the context of the canvas
@@ -87,9 +70,6 @@ function init() {
         }
     });
 
-    // initPointerLock();
-    // tryPointerLock();
-
     // Listens mouse movement event
     canvas.addEventListener("mousemove", function(e){
         mouseControls(e);
@@ -101,17 +81,26 @@ function init() {
 
     gl = WebGLUtils.setupWebGL(canvas);
     if ( !gl ) { alert( "WebGL isn't available" ); }
-    
+
     initGL();
     ctmMatrixLocation = gl.getUniformLocation(program, "uCTM");
+    textureLocation = gl.getUniformLocation(program, "uTexture");
+    useTextureLocation = gl.getUniformLocation(program, "uUseTexture");
     initLighting();
 
     gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
 
-    sphere = new Model([0.0, 0.0, 10.0], generateSphereVertices(1, 10));
-    player = new Player([0.0, 0.0, 5.0], new Model([0.0, 0.0, 5.0], generateSphereVertices(0.5, 10)));
-    
-    window.setInterval(game, delay);
+    playerTexture = loadTexture(gl, "textures/player.png");
+    enemyTexture = loadTexture(gl, "textures/enemy.png");
+
+    const playerModel = new Model([0.0, 0.0, 5.0], generateSphereVertices(0.5, 10), 0.5);
+    playerModel.texture = playerTexture;
+    player = new Player([0.0, 0.0, 5.0], playerModel);
+    player.camera.updateView();
+
+    spawnEnemies(12);
+
+    gameLoopHandle = window.setInterval(game, delay);
 }
 
 // Our gameplay will be here
@@ -121,20 +110,23 @@ function game(){
     deltaTime = (crntFrameTime - prevFrameTime);
     prevFrameTime = crntFrameTime;
 
+    handleCollisions();
     render();
 }
 
 // Rendering function. IT IS NOT THE GAME LOOP
 function render(){
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
+
+    player.camera.updateView();
     renderSkybox(cubemap, player.camera);
 
-    sphere.update();
+    gl.useProgram(program);
+
+    enemies.forEach(enemy => enemy.model.update());
     player.model.update();
-    player.camera.updateView();
-    
-    draw(sphere, player.camera);
+
+    enemies.forEach(enemy => draw(enemy.model, player.camera));
     draw(player.model, player.camera);
 }
 
@@ -144,6 +136,7 @@ function initGL(){
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
     skyboxProgram = initShaders(gl, "skybox-vertex-shader", "skybox-fragment-shader");
+    initSkyboxProgram();
     initSkybox(skyboxVertices);
     cubemap = loadCubemap(gl);
 
@@ -152,4 +145,55 @@ function initGL(){
     gl.enable(gl.CULL_FACE);
     gl.frontFace(gl.CCW);
     gl.cullFace(gl.BACK);
+}
+
+function spawnEnemies(count){
+    enemies = [];
+    for(let i = 0; i < count; i++){
+        const radius = randomRange(0.2, 2.0);
+        const position = randomPosition(radius + 5.0);
+        const enemy = new Enemy(position, radius, enemyTexture);
+        enemies.push(enemy);
+    }
+}
+
+function randomPosition(minDistance){
+    let pos;
+    do{
+        pos = [randomRange(-30, 30), randomRange(-10, 10), randomRange(-30, 30)];
+    } while(distance(pos, player.position) < minDistance);
+    return pos;
+}
+
+function randomRange(min, max){
+    return Math.random() * (max - min) + min;
+}
+
+function distance(a, b){
+    return Math.sqrt(Math.pow(a[0]-b[0],2) + Math.pow(a[1]-b[1],2) + Math.pow(a[2]-b[2],2));
+}
+
+function handleCollisions(){
+    enemies.forEach(enemy => {
+        const dist = distance(enemy.model.position, player.position);
+        if(dist <= enemy.radius + player.radius){
+            if(player.mass >= enemy.mass){
+                player.grow(enemy.mass);
+                respawnEnemy(enemy);
+            } else {
+                clearInterval(gameLoopHandle);
+                alert("Game Over! The enemy was too big to absorb.");
+            }
+        }
+    });
+}
+
+function respawnEnemy(enemy){
+    const newRadius = randomRange(0.2, 2.0);
+    const newPosition = randomPosition(newRadius + player.radius + 2.0);
+    enemy.baseRadius = newRadius;
+    enemy.mass = Math.pow(newRadius, 3);
+    enemy.model = new Model(newPosition, generateSphereVertices(newRadius, 10), newRadius);
+    enemy.model.texture = enemyTexture;
+    enemy.model.setPosition(newPosition[0], newPosition[1], newPosition[2]);
 }

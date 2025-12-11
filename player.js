@@ -2,6 +2,7 @@ class Player{
     // Player's params
     position;
     speed;
+    mass;
 
     // Video settings
     fov;
@@ -15,12 +16,16 @@ class Player{
         this.model = model;
         this.position = position;
         model.setPosition(position[0], position[1], position[2]);
-        // var cameraPos = add(position, [0.0, 1.0, 2.0]);
         var cameraPos = position;
         var cameraTarget = add(cameraPos, [0.0, 0.0, -5.0]);
         this.fov = 90;
         this.camera = new Camera(cameraPos, cameraTarget, this.fov, 0.1, 1000);
         this.speed = speed;
+        this.mass = Math.pow(this.model.getRadius(), 3);
+    }
+
+    get radius(){
+        return this.model.getRadius();
     }
 
     // Move player's position
@@ -63,6 +68,12 @@ class Player{
         const y = -(right[1] * this.speed * delta);
         const z = -(right[2] * this.speed * delta);
         this.move(x, y, z);
+    }
+
+    grow(additionalMass){
+        this.mass += additionalMass;
+        const newRadius = Math.cbrt(this.mass);
+        this.model.setSize(newRadius / this.model.baseRadius);
     }
 
     moveUp(){

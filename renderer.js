@@ -12,6 +12,15 @@ function draw(model, camera){
     gl.uniformMatrix4fv(model.worldMatrixLocation, false, flatten(model.worldMatrix));
     gl.uniform3f(centerLocation, model.position[0], model.position[1], model.position[2]);
 
+    // Texture
+    const useTexture = !!model.texture;
+    gl.uniform1i(useTextureLocation, useTexture);
+    if(useTexture){
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, model.texture);
+        gl.uniform1i(textureLocation, 0);
+    }
+
     // Light
     gl.uniform3f(ambientLocation, ambient[0], ambient[1], ambient[2]);
     gl.uniform3f(lightPosLocation, lightPos[0], lightPos[1], lightPos[2]);
