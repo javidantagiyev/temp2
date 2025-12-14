@@ -12,10 +12,10 @@ function keyContols(e){
         player.moveRight(deltaTime);
     }
     if(e.key == ' '){ // It is space button
-        player.move(0.0, player.speed * deltaTime, 0.0);
+        player.addImpulse([0.0, 1.0, 0.0], deltaTime);
     }
     if(e.key == 'Shift'){
-        player.move(0.0, -player.speed * deltaTime, 0.0);
+        player.addImpulse([0.0, -1.0, 0.0], deltaTime);
     }
 }
 
