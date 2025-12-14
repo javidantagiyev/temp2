@@ -46,16 +46,10 @@ function renderModel(model, camera, pmass, emass, isplayer){
 function renderSkybox(){
     gl.cullFace(gl.FRONT);
     gl.disable(gl.DEPTH_TEST);
-    skybox.setPosition(
-        player.camera.distantPosition[0],
-        player.camera.distantPosition[1],
-        player.camera.distantPosition[2]
-    );
-    skybox.update();
     drawSkybox(skybox, player.camera);
     gl.enable(gl.DEPTH_TEST);
     gl.cullFace(gl.BACK);
-    
+
 }
 
 function drawSkybox(skybox, camera){

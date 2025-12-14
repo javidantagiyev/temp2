@@ -72,19 +72,18 @@ function init() {
     playerTexture = loadTexture(gl, "textures/player.png");
     enemyBigTexture = loadTexture(gl, "textures/enemybig.png");
     enemySmallTexture = loadTexture(gl, "textures/enemybig.png");
-    skyboxTexture = loadTexture(gl, "textures/cosmos.jpg"); //NOT WORKING PROPERLY
+    skyboxTexture = loadTexture(gl, "textures/cosmos.jpg");
 
     // Creating a player
     player = new Player([0.0, 0.0, 5.0], structuredClone(baseSphereVertices), 0.5, playerTexture, 40);
     // Spawning enemies
     spawnEnemies(12);
 
-    // Creating a skybox object
-    skybox = new Skybox([
-        player.camera.distantPosition[0],
-        player.camera.distantPosition[1],
-        player.camera.distantPosition[2]
-    ], structuredClone(baseSphereVertices), 1.0);
+    // Creating a spherical skybox that bounds the scene
+    const skyboxRadius = 60.0;
+    const skyboxVertices = generateSphereVertices(1.0, 16);
+    skybox = new Skybox([0, 0, 0], skyboxVertices, 1.0);
+    skybox.setSize(skyboxRadius / skybox.baseRadius);
     skybox.texture = skyboxTexture;
 
     // Creating a light source
@@ -108,7 +107,7 @@ function game(){
     lightSource.position[1] = npos[1];
 
     player.update(deltaTime);
-    // player.resolveSkyboxCollision(skybox);
+    player.resolveSkyboxCollision(skybox);
     // Handling collision between entities
     handleCollisions();
     render();
