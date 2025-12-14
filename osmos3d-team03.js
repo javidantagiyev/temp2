@@ -89,7 +89,7 @@ function init() {
 
     baseSphereVertices = generateSphereVertices(0.5, 10);
 
-    playerTexture = loadTexture(gl, "textures/player.png");
+    playerTexture = loadTexture(gl, "textures/player2.png");
     enemyBigTexture = loadTexture(gl, "textures/enemybig.png");
     enemySmallTexture = loadTexture(gl, "textures/enemysmall.png");
     skyboxTexture = loadTexture(gl, "textures/galaxy2.png"); //NOT WORKING PROPERLY

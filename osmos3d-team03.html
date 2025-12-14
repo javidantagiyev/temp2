@@ -91,12 +91,9 @@
 
         vFragPos = vec3(uWorld * vec4(aPosition, 1.0));
         vNormal = normalize(vFragPos - uCenter);
-        // float u = atan(vNormal.z, vNormal.x) / (2.0 * PI) + 0.5;
-        // float v = vNormal.y * 0.5 + 0.5;
-        // vTexCoord = vec2(u, v);
-        float u = atan(-vNormal.z, vNormal.x) / (2.0 * PI) + 0.5;
-        float v = asin(clamp(vNormal.y, -1.0, 1.0)) / PI + 0.5;
-        vTexCoord = vec2(u, 1.0 - v);
+        float u = atan(vNormal.z, vNormal.x) / (2.0 * PI) + 0.5;
+        float v = vNormal.y * 0.5 + 0.5;
+        vTexCoord = vec2(u, v);
     }
 </script>
 
