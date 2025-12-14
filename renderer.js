@@ -37,7 +37,15 @@ function draw(model, camera){
 
 
 function drawSkybox(skybox, camera){
-    var ctm = calcCTM(skybox.worldMatrix, camera.view, camera.proj);
+    // Keep the skybox stationary relative to the camera by removing the
+    // translation component from the view matrix. This prevents any parallax
+    // from the camera position while still allowing it to rotate with the view.
+    var viewWithoutTranslation = structuredClone(camera.view);
+    viewWithoutTranslation[0][3] = 0;
+    viewWithoutTranslation[1][3] = 0;
+    viewWithoutTranslation[2][3] = 0;
+
+    var ctm = calcCTM(skybox.worldMatrix, viewWithoutTranslation, camera.proj);
     gl.uniformMatrix4fv(skyboxCtmMatrixLocation, false, flatten(ctm));
 
     gl.uniformMatrix4fv(skybox.worldMatrixLocation, false, flatten(skybox.worldMatrix));
@@ -54,5 +62,9 @@ function drawSkybox(skybox, camera){
 
     skybox.bind();
 
+    // Ensure the skybox always renders behind the scene but without clearing
+    // previously written depth information.
+    gl.depthMask(false);
     gl.drawArrays(gl.TRIANGLES, 0, skybox.vertexCount);
+    gl.depthMask(true);
 }

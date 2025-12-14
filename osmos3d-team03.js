@@ -103,6 +103,9 @@ function init() {
         player.camera.distantPosition[1],
         player.camera.distantPosition[2]
     ], structuredClone(baseSphereVertices), 1.0);
+    // Keep the skybox large enough that it always surrounds the player camera
+    // without clipping against the near/far planes.
+    skybox.scaleFactor = player.camera.far * 0.5;
     skybox.texture = skyboxTexture;
 
     lightSource = new LightSource([100, 100, 0], [0.5, 0.5, 0.0]);
