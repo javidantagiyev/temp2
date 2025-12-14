@@ -49,6 +49,12 @@ var enemyBigTexture;
 var enemySmallTexture;
 var gameLoopHandle;
 var lightSource;
+var score = 0;
+var timeRemaining = 0;
+var initialEnemyCount = 12;
+var baseTimePerEnemy = 8;
+var baseTimeBuffer = 20;
+var hudElements = {};
 
 function init() {
     // Get reference to the context of the canvas
@@ -77,7 +83,9 @@ function init() {
     // Creating a player
     player = new Player([0.0, 0.0, 5.0], structuredClone(baseSphereVertices), 0.5, playerTexture, 40);
     // Spawning enemies
-    spawnEnemies(12);
+    initializeGameStats(initialEnemyCount);
+    spawnEnemies(initialEnemyCount);
+    setupHUD();
 
     // Creating a spherical skybox that bounds the scene
     const skyboxRadius = 60.0;
@@ -91,6 +99,7 @@ function init() {
     lightSource = new LightSource([100, 100, 0], [0.5, 0.5, 0.0]);
 
     // Game loop
+    prevFrameTime = new Date().getTime() / 1000;
     gameLoopHandle = window.setInterval(game, delay);
 }
 
@@ -100,6 +109,14 @@ function game(){
     crntFrameTime = new Date().getTime() / 1000;
     deltaTime = (crntFrameTime - prevFrameTime);
     prevFrameTime = crntFrameTime;
+
+    timeRemaining = Math.max(0, timeRemaining - deltaTime);
+    updateHUD();
+
+    if (timeRemaining === 0){
+        gameOver("You ran out of time! Score: " + score);
+        return;
+    }
 
     // Rotate light source around z axis of the scene 
     var npos = rotatePointZ(lightSource.position[0], lightSource.position[1], 0, 0, 0.3);
@@ -255,16 +272,19 @@ function handleCollisions(){
         if(dist <= enemy.radius + player.radius){
             if(player.mass >= enemy.mass){
                 player.grow(enemy.mass);
+                score += Math.round(enemy.mass * 100);
 
                 // Optinally respawn enemy or remove it
-                
+
                 // respawnEnemy(enemy);
                 removeEnemy(enemy);
                 updateEnemyTextures();
+
+                if (enemies.length === 0){
+                    gameOver("You absorbed them all! Final score: " + score);
+                }
             } else {
-                clearInterval(gameLoopHandle);
-                alert("Game Over! The enemy was too big to absorb.");
-                gameOver();
+                gameOver("Game Over! The enemy was too big to absorb.");
             }
         }
     });
@@ -301,4 +321,35 @@ function updateEnemyTextures(){
         const texture = getEnemyTextureForMass(enemy.mass);
         enemy.setTexture(texture);
     });
+}
+
+function initializeGameStats(enemyCount){
+    score = 0;
+    initialEnemyCount = enemyCount;
+    timeRemaining = baseTimeBuffer + enemyCount * baseTimePerEnemy;
+}
+
+function setupHUD(){
+    hudElements.score = document.getElementById("score-value");
+    hudElements.timer = document.getElementById("timer-value");
+    hudElements.enemies = document.getElementById("enemies-value");
+
+    updateHUD();
+}
+
+function updateHUD(){
+    if (!hudElements.score){
+        return;
+    }
+
+    hudElements.score.textContent = score;
+    hudElements.timer.textContent = formatTime(timeRemaining);
+    hudElements.enemies.textContent = enemies.length;
+}
+
+function formatTime(seconds){
+    const remaining = Math.max(0, Math.floor(seconds));
+    const minutes = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }

@@ -166,6 +166,43 @@
 
 <body style="background-color: #888888;">
 
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #hud {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.55);
+            color: #f0f0f0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+            min-width: 180px;
+        }
+
+        #hud .stat {
+            margin: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+        }
+
+        #hud .label {
+            color: #9dd8ff;
+            margin-right: 8px;
+        }
+
+        #hud .value {
+            font-weight: bold;
+        }
+    </style>
+
     <img id="px" src="textures/galaxy.png" style="display: none;">
     <img id="nx" src="textures/galaxy.png" style="display: none;">
     <img id="py" src="textures/galaxy.png" style="display: none;">
@@ -175,6 +212,11 @@
 
 
     <center>
+        <div id="hud">
+            <div class="stat"><span class="label">Score</span><span class="value" id="score-value">0</span></div>
+            <div class="stat"><span class="label">Timer</span><span class="value" id="timer-value">0:00</span></div>
+            <div class="stat"><span class="label">Enemies</span><span class="value" id="enemies-value">0</span></div>
+        </div>
         <canvas id="gl-canvas" width="1300" height="750">
             Sorry ... your browser doesn't support the HTML5 canvas element.
         </canvas>

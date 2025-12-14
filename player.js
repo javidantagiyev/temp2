@@ -7,12 +7,12 @@ class Player extends Enemy{
         var cameraTarget = add(cameraPos, [0.0, 0.0, -5.0]);
         this.fov = 90;
         this.camera = new Camera(cameraPos, cameraTarget, this.fov, 0.1, 1000);
-        this.speed = speed;
+        this.baseSpeed = speed;
         this.mass = Math.pow(this.model.getRadius(), 3);
+        this.initialMass = this.mass;
         this.velocity = [0.0, 0.0, 0.0];
         this.drag = 4.0;
-        this.acceleration = this.speed * 4.0;
-        this.maxSpeed = this.speed * 1.5;
+        this.updateMovementStats();
     }
 
     // Move player's position
@@ -49,6 +49,7 @@ class Player extends Enemy{
         this.mass += additionalMass;
         const newRadius = Math.cbrt(this.mass);
         this.model.setSize(newRadius / this.model.baseRadius);
+        this.updateMovementStats();
     }
 
     moveUp(){
@@ -64,7 +65,7 @@ class Player extends Enemy{
 
     applyInertia(delta){
         const speed = length(this.velocity);
-        if (this.speed > this.maxSpeed){
+        if (speed > this.maxSpeed){
             const limited = normalize(this.velocity);
             this.velocity = scale(this.maxSpeed, limited);
         }
@@ -75,6 +76,16 @@ class Player extends Enemy{
         this.velocity[0] *= damping;
         this.velocity[1] *= damping;
         this.velocity[2] *= damping;
+    }
+
+    updateMovementStats(){
+        // Larger blobs move slower to add a sense of weight as the player grows.
+        const relativeMassFactor = Math.pow(this.initialMass / this.mass, 1/3);
+        const slowdown = Math.max(0.35, Math.min(1.0, relativeMassFactor));
+
+        this.speed = this.baseSpeed * slowdown;
+        this.acceleration = this.speed * 4.0;
+        this.maxSpeed = this.speed * 1.5;
     }
 
     resolveSkyboxCollision(skybox){
