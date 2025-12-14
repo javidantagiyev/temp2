@@ -24,6 +24,7 @@ class Camera{
     // Used for third person view
     // If it is 0 camera become first person
     distance;
+    height;
     distantPosition;
     
     // Consts
@@ -36,7 +37,7 @@ class Camera{
     MAX_DISTANCE = 10;
     MIN_DISTANCE = 0.1;
 
-    constructor(cameraPos, cameraTarget, fov, near, far, sensitivity = 0.6, distance = 5){
+    constructor(cameraPos, cameraTarget, fov, near, far, sensitivity = 0.6, distance = 3, height = 1.5){
         // View
         this.position = cameraPos;
         this.cameraUp = [0.0, 1.0, 0.0];
@@ -53,6 +54,7 @@ class Camera{
         this.m_roll = 0.0;
         this.sensitivity = sensitivity;
         this.distance = distance;
+        this.height = height;
         this.distantPosition = this.position;
     }
 
@@ -64,14 +66,17 @@ class Camera{
     // Recalculates view matrix
     updateView(){
         this.direction = this.calcDirection();
+        var up = this.calcUp();
         var cameraTarget = add(this.calcDirection(), this.position);
         var direct = scale(this.distance, this.direction);
+        var u = scale(this.height, up);
         this.distantPosition = subtract(this.position, direct);
-
+        var newPos = subtract(this.position, u);
+        // this.direction = subtract(this.direction, u);
 
         this.view = lookAt(
             this.distantPosition,
-            this.position,
+            newPos,
             this.cameraUp
         );
     }
@@ -84,6 +89,13 @@ class Camera{
         calculatedDirection[1] = Math.sin(radians(this.m_pitch));
         calculatedDirection[2] = Math.sin(radians(this.m_yaw)) * Math.cos(radians(this.m_pitch));
         return normalize(calculatedDirection);
+    }
+
+    calcUp(){
+        const right = cross(this.direction, this.cameraUp);
+        const up = cross(this.direction, right);
+        // console.log(up);
+        return up;
     }
 
     increaseDistance(){
@@ -99,6 +111,17 @@ class Camera{
             this.distance = this.MIN_DISTANCE; 
         }
     }
+
+    // increaseHeight(){
+    //     this.distance -= this.DISTANCE_FACTOR
+    //     if(this.distance <= this.MIN_DISTANCE){
+    //         this.distance = this.MIN_DISTANCE; 
+    //     }        
+    // }
+
+    // decreaseHeight(){
+
+    // }
 
 
     // Zooming

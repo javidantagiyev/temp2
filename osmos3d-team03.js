@@ -29,6 +29,7 @@ var skybox;
 var cubemap;
 var textureLocation;
 var useTextureLocation;
+var colorLocation;
 
 var posAttribLocation;
 var colorAttribLocation;
@@ -52,13 +53,125 @@ var lightSource;
 function init() {
     // Get reference to the context of the canvas
     canvas = document.getElementById("gl-canvas");
+    
+    // Initializing mouse controls
+    initMouseControls();
+
+    gl = WebGLUtils.setupWebGL(canvas);
+    if ( !gl ) { alert( "WebGL isn't available" ); }
+
+    // Initializing gl parameters and shaders
+    initGL();
+
+    // Creating a base sphere vertex array
+    // This model will be used for all sphere objects
+    // It is done to not generate a seperate vertex array every time
+    baseSphereVertices = generateSphereVertices(0.5, 10);
+
+    // Loading textures that will be used
+    playerTexture = loadTexture(gl, "textures/player.png");
+    enemyBigTexture = loadTexture(gl, "textures/enemybig.png");
+    enemySmallTexture = loadTexture(gl, "textures/enemybig.png");
+    skyboxTexture = loadTexture(gl, "textures/cosmos.jpg"); //NOT WORKING PROPERLY
+
+    // Creating a player
+    player = new Player([0.0, 0.0, 5.0], structuredClone(baseSphereVertices), 0.5, playerTexture, 40);
+    // Spawning enemies
+    spawnEnemies(12);
+
+    // Creating a skybox object
+    skybox = new Skybox([
+        player.camera.distantPosition[0],
+        player.camera.distantPosition[1],
+        player.camera.distantPosition[2]
+    ], structuredClone(baseSphereVertices), 1.0);
+    skybox.texture = skyboxTexture;
+
+    // Creating a light source
+    // There is a single light source in the game
+    lightSource = new LightSource([100, 100, 0], [0.5, 0.5, 0.0]);
+
+    // Game loop
+    gameLoopHandle = window.setInterval(game, delay);
+}
+
+// Our gameplay will be here
+function game(){
+    // Delta time calculation
+    crntFrameTime = new Date().getTime() / 1000;
+    deltaTime = (crntFrameTime - prevFrameTime);
+    prevFrameTime = crntFrameTime;
+
+    // Rotate light source around z axis of the scene 
+    var npos = rotatePointZ(lightSource.position[0], lightSource.position[1], 0, 0, 0.3);
+    lightSource.position[0] = npos[0];
+    lightSource.position[1] = npos[1];
+
+    player.update(deltaTime);
+    // player.resolveSkyboxCollision(skybox);
+    // Handling collision between entities
+    handleCollisions();
+    render();
+}
+
+// Rendering function.
+function render(){
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    // Updating view matrix
+    player.camera.updateView();
+
+    // Rendering skybox
+    gl.useProgram(skyboxProgram);
+    skybox.update();
+    renderSkybox(skybox, player.camera);
+
+    // Updating entities' world matrices
+    gl.useProgram(program);
+    enemies.forEach(enemy => enemy.model.update());
+    player.model.update();
+
+    // Rendering entities
+    enemies.forEach(enemy => renderModel(enemy.model, player.camera, player.mass, enemy.mass, false));
+    renderModel(player.model, player.camera, 0, 0, true);
+}
+
+
+// Initializing some OpenGL parameters
+function initGL(){
+    // Creating shader program for entities
+    program = initShaders(gl, "vertex-shader", "fragment-shader");
+    gl.useProgram(program);
+
+    ctmMatrixLocation = gl.getUniformLocation(program, "uCTM");
+    textureLocation = gl.getUniformLocation(program, "uTexture");
+    useTextureLocation = gl.getUniformLocation(program, "uUseTexture");
+    colorLocation = gl.getUniformLocation(program, "uColor");
+
+    // Initializing lighting for entity objects
+    initLighting();
+    
+    // Creating shader program for skybox
+    createSkyboxProgram();
+    
+    // Just some webgl configurations
+    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
+    gl.frontFace(gl.CCW);
+    gl.cullFace(gl.BACK);
+}
+
+function initMouseControls(){
     // Mouse cursor lock (for 3d movement)
-    // For Firefox
+    // Pointer lock for Firefox
     canvas.onclick = () => {
         canvas.requestPointerLock(true);
     }
 
-    // For Chromium based browsers
+    // Pointer lock for Chromium based browsers
     canvas.addEventListener("click", async () => {
 
         // Must run inside the click handler
@@ -77,117 +190,14 @@ function init() {
         mouseControls(e);
     }, false);
 
+    // Mouse wheel control
     canvas.addEventListener("wheel", function(e){
         mouseWheelControls(e);
     }, false);
-
-    gl = WebGLUtils.setupWebGL(canvas);
-    if ( !gl ) { alert( "WebGL isn't available" ); }
-
-    // Objects
-    initGL();
-
-    baseSphereVertices = generateSphereVertices(0.5, 10);
-
-    playerTexture = loadTexture(gl, "textures/player.png");
-    enemyBigTexture = loadTexture(gl, "textures/enemybig.png");
-    enemySmallTexture = loadTexture(gl, "textures/enemysmall.png");
-    skyboxTexture = loadTexture(gl, "textures/cosmos.jpg"); //NOT WORKING PROPERLY
-
-    
-    player = new Player([0.0, 0.0, 5.0], structuredClone(baseSphereVertices), 0.5, playerTexture, 10);
-    spawnEnemies(12);
-
-    skybox = new Skybox([
-        player.camera.distantPosition[0],
-        player.camera.distantPosition[1],
-        player.camera.distantPosition[2]
-    ], structuredClone(baseSphereVertices), 1.0);
-    // Keep the skybox large enough that it always surrounds the player camera
-    // without clipping against the near/far planes.
-    skybox.scaleFactor = player.camera.far * 0.5;
-    skybox.texture = skyboxTexture;
-
-    lightSource = new LightSource([100, 100, 0], [0.5, 0.5, 0.0]);
-
-    gameLoopHandle = window.setInterval(game, delay);
-}
-
-// Our gameplay will be here
-function game(){
-    // Delta
-    crntFrameTime = new Date().getTime() / 1000;
-    deltaTime = (crntFrameTime - prevFrameTime);
-    prevFrameTime = crntFrameTime;
-
-    var npos = rotatePointZ(lightSource.position[0], lightSource.position[1], 0, 0, 0.3);
-    lightSource.position[0] = npos[0];
-    lightSource.position[1] = npos[1];
-
-    // Handling player controls and movement with skybox collision
-    player.update(deltaTime);
-    player.resolveSkyboxCollision(skybox);
-    handleCollisions();
-    render();
-}
-
-// Rendering function. IT IS NOT THE GAME LOOP
-function render(){
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    player.camera.updateView();
-    gl.useProgram(skyboxProgram);
-
-
-    gl.disable(gl.CULL_FACE);
-    gl.disable(gl.DEPTH_TEST);
-    skybox.setPosition(
-        player.camera.distantPosition[0],
-        player.camera.distantPosition[1],
-        player.camera.distantPosition[2]
-    );
-    skybox.update();
-    drawSkybox(skybox, player.camera);
-    gl.enable(gl.DEPTH_TEST);
-    gl.enable(gl.CULL_FACE);
-    gl.cullFace(gl.BACK); 
-
-    gl.useProgram(program);
-
-    enemies.forEach(enemy => enemy.model.update());
-    player.model.update();
-
-    enemies.forEach(enemy => draw(enemy.model, player.camera));
-    draw(player.model, player.camera);
 }
 
 
-// Initializing some OpenGL parameters
-function initGL(){
-    program = initShaders(gl, "vertex-shader", "fragment-shader");
-    gl.useProgram(program);
-    
-    // createMoteProgram();
-    ctmMatrixLocation = gl.getUniformLocation(program, "uCTM");
-    textureLocation = gl.getUniformLocation(program, "uTexture");
-    useTextureLocation = gl.getUniformLocation(program, "uUseTexture");
-    initLighting();
-    
-    // Skybox
-    createSkyboxProgram();
-
-    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
-
-
-    gl.enable(gl.BLEND)
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    // Just backface-culling, hidden surface removal and e.g.
-    gl.enable(gl.DEPTH_TEST);
-    gl.enable(gl.CULL_FACE);
-    gl.frontFace(gl.CCW);
-    gl.cullFace(gl.BACK);
-}
-
+// Spawining enemies in the game
 function spawnEnemies(count){
     enemies = [];
     for(let i = 0; i < count; i++){
@@ -200,6 +210,7 @@ function spawnEnemies(count){
     }
 }
 
+// Function for getting random positions
 function randomPosition(minDistance){
     let pos;
     do{
@@ -212,10 +223,13 @@ function randomRange(min, max){
     return Math.random() * (max - min) + min;
 }
 
+// Calculating distance between 2 objects
 function distance(a, b){
     return Math.sqrt(Math.pow(a[0]-b[0],2) + Math.pow(a[1]-b[1],2) + Math.pow(a[2]-b[2],2));
 }
 
+
+// Handling collision between entites
 function handleCollisions(){
     enemies.forEach(enemy => {
         const dist = distance(enemy.model.position, player.position);
@@ -237,6 +251,7 @@ function handleCollisions(){
     });
 }
 
+// Respawning an enemy
 function respawnEnemy(enemy){
     const newRadius = randomRange(0.2, 2.0);
     const newPosition = randomPosition(newRadius + player.radius + 2.0);

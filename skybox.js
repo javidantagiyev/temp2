@@ -224,6 +224,11 @@ var skyboxCtmMatrixLocation;
 var skyboxTextureLocation;
 var skyboxUseTextureLocation;
 
+var skyboxProgram2
+var skyboxTextureLocation2;
+var skyboxUseTextureLocation2;
+
+
 function createSkyboxProgram(){
     skyboxProgram = initShaders(gl, "skybox-vertex-shader", "skybox-fragment-shader");
     gl.useProgram(skyboxProgram);
@@ -234,3 +239,12 @@ function createSkyboxProgram(){
     skyboxUseTextureLocation = gl.getUniformLocation(skyboxProgram, "uUseTexture");
 
 }
+
+// function createSkybox2Program(){
+//     skyboxProgram2 = initShaders(gl, "skybox2-vertex-shader", "skybox2-fragment-shader");
+//     gl.useProgram(skyboxProgram2);
+
+//     skyboxTextureLocation2 = gl.getUniformLocation(skyboxProgram2, "uTexture");
+//     skyboxUseTextureLocation2 = gl.getUniformLocation(skyboxProgram2, "uUseTexture");
+// }
+

@@ -1,6 +1,6 @@
 class Player extends Enemy{
 
-    constructor(position, vertices, radius, texture, speed = 40){
+    constructor(position, vertices, radius, texture, speed = 20){
         super(position, vertices, radius, texture);
         this.model.setPosition(position[0], position[1], position[2]);
         var cameraPos = position;
@@ -26,18 +26,22 @@ class Player extends Enemy{
 
     // Moving player in camera directions
     moveForward(delta){
+        const direct = this.camera.direction;
         this.addImpulse(direct, delta);
     }
 
     moveBack(delta){
+        const direct = this.camera.direction;
         this.addImpulse(scale(-1, direct), delta);
     }
 
     moveRight(delta){
+        const right = cross(this.camera.direction, this.camera.cameraUp);
         this.addImpulse(right, delta);
     }
 
     moveLeft(delta){
+        const right = cross(this.camera.direction, this.camera.cameraUp);
         this.addImpulse(scale(-1, right), delta);
     }
 
@@ -60,7 +64,7 @@ class Player extends Enemy{
 
     applyInertia(delta){
         const speed = length(this.velocity);
-        if (speed > this.maxSpeed){
+        if (this.speed > this.maxSpeed){
             const limited = normalize(this.velocity);
             this.velocity = scale(this.maxSpeed, limited);
         }
