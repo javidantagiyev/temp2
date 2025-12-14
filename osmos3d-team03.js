@@ -199,14 +199,34 @@ function initMouseControls(){
 // Spawining enemies in the game
 function spawnEnemies(count){
     enemies = [];
+
+    // Keep a running mass budget to guarantee there is always a growth path
+    // for the player. Each new enemy is generated so that, after the player
+    // eats the previously generated ones, its mass will be large enough to
+    // absorb the next enemy. This prevents impossible seeds where every enemy
+    // is larger than the player on reload.
+    const minRadius = 0.2;
+    const maxRadius = 2.0;
+    const minMass = Math.pow(minRadius, 3);
+    const maxMass = Math.pow(maxRadius, 3);
+
+    let projectedPlayerMass = player.mass;
+
     for(let i = 0; i < count; i++){
-        const radius = randomRange(0.2, 2.0);
+        // Allow slight difficulty ramp while keeping the enemy absorbable
+        // after the player grows from previous enemies.
+        const maxEnemyMass = Math.min(maxMass, projectedPlayerMass * 1.2);
+        const enemyMass = randomRange(minMass, Math.max(minMass, maxEnemyMass));
+        const radius = Math.cbrt(enemyMass);
         const position = randomPosition(radius + 5.0);
-        const enemyMass = Math.pow(radius, 3);
         const texture = getEnemyTextureForMass(enemyMass);
         const enemy = new Enemy(position, structuredClone(baseSphereVertices), radius, texture);
         enemies.push(enemy);
+
+        projectedPlayerMass += enemyMass;
     }
+
+    updateEnemyTextures();
 }
 
 // Function for getting random positions
