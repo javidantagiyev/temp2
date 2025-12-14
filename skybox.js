@@ -212,6 +212,10 @@ class Skybox{
         this.position[1] = y;
         this.position[2] = z;
     }
+
+    getRadius(){
+        return this.baseRadius * this.scaleFactor;
+    }
 }
 
 var skyboxProgram;

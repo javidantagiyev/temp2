@@ -9,6 +9,10 @@ class Player extends Enemy{
         this.camera = new Camera(cameraPos, cameraTarget, this.fov, 0.1, 1000);
         this.speed = speed;
         this.mass = Math.pow(this.model.getRadius(), 3);
+        this.velocity = [0.0, 0.0, 0.0];
+        this.drag = 4.0;
+        this.acceleration = this.speed * 4.0;
+        this.maxSpeed = this.speed * 1.5;
     }
 
     // Move player's position
@@ -22,35 +26,19 @@ class Player extends Enemy{
 
     // Moving player in camera directions
     moveForward(delta){
-        const direct = this.camera.direction;
-        const x = (direct[0] * this.speed * delta);
-        const y = (direct[1] * this.speed * delta);
-        const z = (direct[2] * this.speed * delta);
-        this.move(x, y, z);
+        this.addImpulse(direct, delta);
     }
 
     moveBack(delta){
-        const direct = this.camera.direction;
-        const x = -(direct[0] * this.speed * delta);
-        const y = -(direct[1] * this.speed * delta);
-        const z = -(direct[2] * this.speed * delta);
-        this.move(x, y, z);
+        this.addImpulse(scale(-1, direct), delta);
     }
 
     moveRight(delta){
-        const right = cross(this.camera.direction, this.camera.cameraUp);
-        const x = (right[0] * this.speed * delta);
-        const y = (right[1] * this.speed * delta);
-        const z = (right[2] * this.speed * delta);
-        this.move(x, y, z);
+        this.addImpulse(right, delta);
     }
 
     moveLeft(delta){
-        const right = cross(this.camera.direction, this.camera.cameraUp);
-        const x = -(right[0] * this.speed * delta);
-        const y = -(right[1] * this.speed * delta);
-        const z = -(right[2] * this.speed * delta);
-        this.move(x, y, z);
+        this.addImpulse(scale(-1, right), delta);
     }
 
     grow(additionalMass){
@@ -61,5 +49,54 @@ class Player extends Enemy{
 
     moveUp(){
 
+    }
+
+    addImpulse(direction, delta){
+        const impulseStrength = this.acceleration * delta;
+        this.velocity[0] += direction[0] * impulseStrength;
+        this.velocity[1] += direction[1] * impulseStrength;
+        this.velocity[2] += direction[2] * impulseStrength;
+    }
+
+    applyInertia(delta){
+        const speed = length(this.velocity);
+        if (speed > this.maxSpeed){
+            const limited = normalize(this.velocity);
+            this.velocity = scale(this.maxSpeed, limited);
+        }
+
+        this.move(this.velocity[0] * delta, this.velocity[1] * delta, this.velocity[2] * delta);
+
+        const damping = Math.exp(-this.drag * delta);
+        this.velocity[0] *= damping;
+        this.velocity[1] *= damping;
+        this.velocity[2] *= damping;
+    }
+
+    resolveSkyboxCollision(skybox){
+        if (!skybox){
+            return;
+        }
+
+        const offset = subtract(this.position, skybox.position);
+        const distanceFromCenter = length(offset);
+        const maxDistance = skybox.getRadius() - this.radius;
+
+        if (distanceFromCenter > maxDistance){
+            const direction = distanceFromCenter === 0 ? [1, 0, 0] : normalize(offset);
+            const targetPosition = add(skybox.position, scale(maxDistance - 0.01, direction));
+            const correction = subtract(targetPosition, this.position);
+            this.move(correction[0], correction[1], correction[2]);
+
+            const outwardSpeed = dot(this.velocity, direction);
+            if (outwardSpeed > 0){
+                const outward = scale(outwardSpeed, direction);
+                this.velocity = subtract(this.velocity, outward);
+            }
+        }
+    }
+
+    update(delta){
+        this.applyInertia(delta);
     }
 }

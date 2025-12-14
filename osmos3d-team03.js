@@ -73,28 +73,28 @@ function init() {
     });
 
     // Listens mouse movement event
-    canvas.addEventListener("mousemove", function (e) {
+    canvas.addEventListener("mousemove", function(e){
         mouseControls(e);
     }, false);
 
-    canvas.addEventListener("wheel", function (e) {
+    canvas.addEventListener("wheel", function(e){
         mouseWheelControls(e);
     }, false);
 
     gl = WebGLUtils.setupWebGL(canvas);
-    if (!gl) { alert("WebGL isn't available"); }
+    if ( !gl ) { alert( "WebGL isn't available" ); }
 
     // Objects
     initGL();
 
     baseSphereVertices = generateSphereVertices(0.5, 10);
 
-    playerTexture = loadTexture(gl, "textures/player2.png");
+    playerTexture = loadTexture(gl, "textures/player.png");
     enemyBigTexture = loadTexture(gl, "textures/enemybig.png");
     enemySmallTexture = loadTexture(gl, "textures/enemysmall.png");
-    skyboxTexture = loadTexture(gl, "textures/galaxy2.png"); //NOT WORKING PROPERLY
+    skyboxTexture = loadTexture(gl, "textures/cosmos.jpg"); //NOT WORKING PROPERLY
 
-
+    
     player = new Player([0.0, 0.0, 5.0], structuredClone(baseSphereVertices), 0.5, playerTexture, 10);
     spawnEnemies(12);
 
@@ -114,7 +114,7 @@ function init() {
 }
 
 // Our gameplay will be here
-function game() {
+function game(){
     // Delta
     crntFrameTime = new Date().getTime() / 1000;
     deltaTime = (crntFrameTime - prevFrameTime);
@@ -124,12 +124,15 @@ function game() {
     lightSource.position[0] = npos[0];
     lightSource.position[1] = npos[1];
 
+    // Handling player controls and movement with skybox collision
+    player.update(deltaTime);
+    player.resolveSkyboxCollision(skybox);
     handleCollisions();
     render();
 }
 
 // Rendering function. IT IS NOT THE GAME LOOP
-function render() {
+function render(){
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     player.camera.updateView();
@@ -147,7 +150,7 @@ function render() {
     drawSkybox(skybox, player.camera);
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
-    gl.cullFace(gl.BACK);
+    gl.cullFace(gl.BACK); 
 
     gl.useProgram(program);
 
@@ -160,20 +163,20 @@ function render() {
 
 
 // Initializing some OpenGL parameters
-function initGL() {
+function initGL(){
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
-
+    
     // createMoteProgram();
     ctmMatrixLocation = gl.getUniformLocation(program, "uCTM");
     textureLocation = gl.getUniformLocation(program, "uTexture");
     useTextureLocation = gl.getUniformLocation(program, "uUseTexture");
     initLighting();
-
+    
     // Skybox
     createSkyboxProgram();
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
 
 
     gl.enable(gl.BLEND)
@@ -185,9 +188,9 @@ function initGL() {
     gl.cullFace(gl.BACK);
 }
 
-function spawnEnemies(count) {
+function spawnEnemies(count){
     enemies = [];
-    for (let i = 0; i < count; i++) {
+    for(let i = 0; i < count; i++){
         const radius = randomRange(0.2, 2.0);
         const position = randomPosition(radius + 5.0);
         const enemyMass = Math.pow(radius, 3);
@@ -197,31 +200,31 @@ function spawnEnemies(count) {
     }
 }
 
-function randomPosition(minDistance) {
+function randomPosition(minDistance){
     let pos;
-    do {
+    do{
         pos = [randomRange(-30, 30), randomRange(-10, 10), randomRange(-30, 30)];
-    } while (distance(pos, player.position) < minDistance);
+    } while(distance(pos, player.position) < minDistance);
     return pos;
 }
 
-function randomRange(min, max) {
+function randomRange(min, max){
     return Math.random() * (max - min) + min;
 }
 
-function distance(a, b) {
-    return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2) + Math.pow(a[2] - b[2], 2));
+function distance(a, b){
+    return Math.sqrt(Math.pow(a[0]-b[0],2) + Math.pow(a[1]-b[1],2) + Math.pow(a[2]-b[2],2));
 }
 
-function handleCollisions() {
+function handleCollisions(){
     enemies.forEach(enemy => {
         const dist = distance(enemy.model.position, player.position);
-        if (dist <= enemy.radius + player.radius) {
-            if (player.mass >= enemy.mass) {
+        if(dist <= enemy.radius + player.radius){
+            if(player.mass >= enemy.mass){
                 player.grow(enemy.mass);
 
                 // Optinally respawn enemy or remove it
-
+                
                 // respawnEnemy(enemy);
                 removeEnemy(enemy);
                 updateEnemyTextures();
@@ -234,7 +237,7 @@ function handleCollisions() {
     });
 }
 
-function respawnEnemy(enemy) {
+function respawnEnemy(enemy){
     const newRadius = randomRange(0.2, 2.0);
     const newPosition = randomPosition(newRadius + player.radius + 2.0);
     const newMass = Math.pow(newRadius, 3);
@@ -242,24 +245,24 @@ function respawnEnemy(enemy) {
     enemy.respawn(newPosition, newRadius, texture);
 }
 
-function removeEnemy(enemy) {
+function removeEnemy(enemy){
     const index = enemies.indexOf(enemy);
 
-    if (index !== -1) {
+    if(index !== -1){
         enemies.splice(index, 1);
     }
 }
 
 
-function getEnemyTextureForMass(enemyMass) {
-    if (enemyMass > player.mass) {
+function getEnemyTextureForMass(enemyMass){
+    if(enemyMass > player.mass){
         return enemyBigTexture;
     }
 
     return enemySmallTexture;
 }
 
-function updateEnemyTextures() {
+function updateEnemyTextures(){
     enemies.forEach(enemy => {
         const texture = getEnemyTextureForMass(enemy.mass);
         enemy.setTexture(texture);
