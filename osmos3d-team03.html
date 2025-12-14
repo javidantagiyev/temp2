@@ -112,7 +112,7 @@
         if(uUseTexture){
             baseColor = texture2D(uTexture, vTexCoord).rgb;
         }
-        gl_FragColor = vec4(baseColor * vec3(0.3, 0.3, 0.3), 1.0);
+        gl_FragColor = vec4(baseColor, 1.0);
     }
 </script>
 

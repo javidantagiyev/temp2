@@ -216,6 +216,10 @@ class Skybox{
     getRadius(){
         return this.baseRadius * this.scaleFactor;
     }
+
+    setSize(scale){
+        this.scaleFactor = scale;
+    }
 }
 
 var skyboxProgram;

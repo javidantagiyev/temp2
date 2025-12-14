@@ -94,7 +94,8 @@ class Player extends Enemy{
 
             const outwardSpeed = dot(this.velocity, direction);
             if (outwardSpeed > 0){
-                const outward = scale(outwardSpeed, direction);
+                const restitution = 0.8;
+                const outward = scale((1 + restitution) * outwardSpeed, direction);
                 this.velocity = subtract(this.velocity, outward);
             }
         }
