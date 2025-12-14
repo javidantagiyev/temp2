@@ -124,6 +124,8 @@ function game() {
     lightSource.position[0] = npos[0];
     lightSource.position[1] = npos[1];
 
+    player.update(deltaTime);
+    player.resolveSkyboxCollision(skybox);
     handleCollisions();
     render();
 }
