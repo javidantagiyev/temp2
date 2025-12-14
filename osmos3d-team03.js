@@ -78,17 +78,17 @@ function init() {
     playerTexture = loadTexture(gl, "textures/player.png");
     enemyBigTexture = loadTexture(gl, "textures/enemybig.png");
     enemySmallTexture = loadTexture(gl, "textures/enemybig.png");
-    skyboxTexture = loadTexture(gl, "textures/cosmos.jpg");
+    skyboxTexture = loadTexture(gl, "textures/galaxy2.png");
 
     // Creating a player
-    player = new Player([0.0, 0.0, 5.0], structuredClone(baseSphereVertices), 0.5, playerTexture, 40);
+    player = new Player([0.0, 0.0, 5.0], structuredClone(baseSphereVertices), 0.5, playerTexture, 100);
     // Spawning enemies
     initializeGameStats(initialEnemyCount);
     spawnEnemies(initialEnemyCount);
     setupHUD();
 
     // Creating a spherical skybox that bounds the scene
-    const skyboxRadius = 60.0;
+    const skyboxRadius = 120.0;
     const skyboxVertices = generateSphereVertices(1.0, 16);
     skybox = new Skybox([0, 0, 0], skyboxVertices, 1.0);
     skybox.setSize(skyboxRadius / skybox.baseRadius);
@@ -280,9 +280,12 @@ function handleCollisions(){
                 removeEnemy(enemy);
                 updateEnemyTextures();
 
-                if (enemies.length === 0){
-                    gameOver("You absorbed them all! Final score: " + score);
+                if (enemies.length === 0) {
+                    setTimeout(() => {
+                        gameOver("You absorbed them all! Final score: " + score);
+                    }, 500); // delay in ms (500 = 0.5s)
                 }
+
             } else {
                 gameOver("Game Over! The enemy was too big to absorb.");
             }
