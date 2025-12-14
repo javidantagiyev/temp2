@@ -1,8 +1,9 @@
 class Enemy {
-    constructor(position, radius, texture) {
+    constructor(position, vertices, radius, texture) {
+        this.position = position;
         this.baseRadius = radius;
         this.mass = Math.pow(radius, 3);
-        this.model = new Model(position, generateSphereVertices(radius, 10), radius);
+        this.model = new Model(position, vertices, radius);
         this.model.setPosition(position[0], position[1], position[2]);
         this.setTexture(texture);
     }
@@ -24,5 +25,21 @@ class Enemy {
         if (this.model) {
             this.model.texture = texture;
         }
+    }
+
+    increaseMass(m){
+        this.mass += m;
+    }
+
+    decreaseMass(m){
+        this.mass -= m;
+        if(this.mass <= 0){
+            return false;
+        }
+        return true;
+    }
+
+    die(){
+
     }
 }

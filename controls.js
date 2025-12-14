@@ -27,8 +27,8 @@ function mouseControls(e){
     const dx = e.movementX;
     const dy = e.movementY;
 
-    player.camera.yaw(dx);
-    player.camera.pitch(-dy);
+    player.camera.yaw(dx/5);
+    player.camera.pitch(-dy/5);
 }
 
 function mouseWheelControls(e){

@@ -23,9 +23,9 @@ var prevFrameTime = 0;
 
 // Shaders
 var program;
-var skyboxProgram;
 
 // Texturing
+var skybox;
 var cubemap;
 var textureLocation;
 var useTextureLocation;
@@ -47,6 +47,7 @@ var playerTexture;
 var enemyBigTexture;
 var enemySmallTexture;
 var gameLoopHandle;
+var lightSource;
 
 function init() {
     // Get reference to the context of the canvas
@@ -83,26 +84,28 @@ function init() {
     gl = WebGLUtils.setupWebGL(canvas);
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
+    // Objects
     initGL();
-    ctmMatrixLocation = gl.getUniformLocation(program, "uCTM");
-    textureLocation = gl.getUniformLocation(program, "uTexture");
-    useTextureLocation = gl.getUniformLocation(program, "uUseTexture");
-    initLighting();
 
-    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
+    baseSphereVertices = generateSphereVertices(0.5, 10);
 
     playerTexture = loadTexture(gl, "textures/player.png");
     enemyBigTexture = loadTexture(gl, "textures/enemybig.png");
     enemySmallTexture = loadTexture(gl, "textures/enemysmall.png");
-    skyboxTexture = loadCubemap(gl, "textures/galaxy.png"); //NOT WORKING PROPERLY
+    skyboxTexture = loadTexture(gl, "textures/cosmos.jpg"); //NOT WORKING PROPERLY
 
-
-    const playerModel = new Model([0.0, 0.0, 5.0], generateSphereVertices(0.5, 10), 0.5);
-    playerModel.texture = playerTexture;
-    player = new Player([0.0, 0.0, 5.0], playerModel);
-    player.camera.updateView();
-
+    
+    player = new Player([0.0, 0.0, 5.0], structuredClone(baseSphereVertices), 0.5, playerTexture, 10);
     spawnEnemies(12);
+
+    skybox = new Skybox([
+        player.camera.distantPosition[0],
+        player.camera.distantPosition[1],
+        player.camera.distantPosition[2]
+    ], structuredClone(baseSphereVertices), 1.0);
+    skybox.texture = skyboxTexture;
+
+    lightSource = new LightSource([100, 100, 0], [0.5, 0.5, 0.0]);
 
     gameLoopHandle = window.setInterval(game, delay);
 }
@@ -114,6 +117,10 @@ function game(){
     deltaTime = (crntFrameTime - prevFrameTime);
     prevFrameTime = crntFrameTime;
 
+    var npos = rotatePointZ(lightSource.position[0], lightSource.position[1], 0, 0, 0.3);
+    lightSource.position[0] = npos[0];
+    lightSource.position[1] = npos[1];
+
     handleCollisions();
     render();
 }
@@ -123,7 +130,21 @@ function render(){
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     player.camera.updateView();
-    renderSkybox(cubemap, player.camera);
+    gl.useProgram(skyboxProgram);
+
+
+    gl.disable(gl.CULL_FACE);
+    gl.disable(gl.DEPTH_TEST);
+    skybox.setPosition(
+        player.camera.distantPosition[0],
+        player.camera.distantPosition[1],
+        player.camera.distantPosition[2]
+    );
+    skybox.update();
+    drawSkybox(skybox, player.camera);
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
+    gl.cullFace(gl.BACK); 
 
     gl.useProgram(program);
 
@@ -139,11 +160,21 @@ function render(){
 function initGL(){
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
-    skyboxProgram = initShaders(gl, "skybox-vertex-shader", "skybox-fragment-shader");
-    initSkyboxProgram();
-    initSkybox(skyboxVertices);
-    cubemap = loadCubemap(gl);
+    
+    // createMoteProgram();
+    ctmMatrixLocation = gl.getUniformLocation(program, "uCTM");
+    textureLocation = gl.getUniformLocation(program, "uTexture");
+    useTextureLocation = gl.getUniformLocation(program, "uUseTexture");
+    initLighting();
+    
+    // Skybox
+    createSkyboxProgram();
 
+    gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
+
+
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     // Just backface-culling, hidden surface removal and e.g.
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
@@ -158,7 +189,7 @@ function spawnEnemies(count){
         const position = randomPosition(radius + 5.0);
         const enemyMass = Math.pow(radius, 3);
         const texture = getEnemyTextureForMass(enemyMass);
-        const enemy = new Enemy(position, radius, texture);
+        const enemy = new Enemy(position, structuredClone(baseSphereVertices), radius, texture);
         enemies.push(enemy);
     }
 }
@@ -194,6 +225,7 @@ function handleCollisions(){
             } else {
                 clearInterval(gameLoopHandle);
                 alert("Game Over! The enemy was too big to absorb.");
+                gameOver();
             }
         }
     });

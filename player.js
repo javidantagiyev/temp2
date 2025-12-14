@@ -1,31 +1,14 @@
-class Player{
-    // Player's params
-    position;
-    speed;
-    mass;
+class Player extends Enemy{
 
-    // Video settings
-    fov;
-
-    // Player's body(Player also is a sphere)
-    sphereModel;
-    model;
-    camera;
-
-    constructor(position, model, speed = 40){
-        this.model = model;
-        this.position = position;
-        model.setPosition(position[0], position[1], position[2]);
+    constructor(position, vertices, radius, texture, speed = 40){
+        super(position, vertices, radius, texture);
+        this.model.setPosition(position[0], position[1], position[2]);
         var cameraPos = position;
         var cameraTarget = add(cameraPos, [0.0, 0.0, -5.0]);
         this.fov = 90;
         this.camera = new Camera(cameraPos, cameraTarget, this.fov, 0.1, 1000);
         this.speed = speed;
         this.mass = Math.pow(this.model.getRadius(), 3);
-    }
-
-    get radius(){
-        return this.model.getRadius();
     }
 
     // Move player's position

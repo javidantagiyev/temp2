@@ -67,36 +67,51 @@
             baseColor = texture2D(uTexture, vTexCoord).rgb;
         }
 
-        gl_FragColor = vec4(lighting * baseColor, 1.0);
+        gl_FragColor = vec4(lighting * baseColor, 0.7);
     }
 </script>
 
 
 <script id="skybox-vertex-shader" type="x-shader/x-vertex">
-    attribute vec3 position;
-    varying vec3 vDir;
+    attribute vec3 aPosition;
 
-    uniform mat4 uProjection;
-    uniform mat4 uView;
+    varying vec3 vFragPos;
+    varying vec3 vNormal;
+    varying vec2 vTexCoord;
+
+    uniform mat4 uCTM;
+    uniform vec3 uCenter;
+    uniform mat4 uWorld;
+
+    const float PI = 3.141592653589793;
 
     void main() {
-        vDir = mat3(uView) * position;  // remove translation
-        mat4 viewRotation = mat4(mat3(uView));
-        gl_Position = uProjection * viewRotation * vec4(position, 1.0);
+        // Just use the vertex as is.
+        gl_Position = uCTM * vec4(aPosition, 1.0);
 
-        // Move depth to far plane
-        gl_Position.z = gl_Position.w;
+        vFragPos = vec3(uWorld * vec4(aPosition, 1.0));
+        vNormal = normalize(vFragPos - uCenter);
+        float u = atan(vNormal.z, vNormal.x) / (2.0 * PI) + 0.5;
+        float v = vNormal.y * 0.5 + 0.5;
+        vTexCoord = vec2(u, v);
     }
 </script>
 
 <script id="skybox-fragment-shader" type="x-shader/x-fragment">
+    // Set how many bits used for float values. Will not work otherwise.
     precision mediump float;
 
-    varying vec3 vDir;
-    uniform samplerCube uCubemap;
+    varying vec2 vTexCoord;
+
+    uniform sampler2D uTexture;
+    uniform bool uUseTexture;
 
     void main() {
-        gl_FragColor = textureCube(uCubemap, normalize(vDir));
+        vec3 baseColor = vec3(1.0, 0.5, 0.0);
+        if(uUseTexture){
+            baseColor = texture2D(uTexture, vTexCoord).rgb;
+        }
+        gl_FragColor = vec4(baseColor * vec3(0.3, 0.3, 0.3), 1.0);
     }
 </script>
 
@@ -108,13 +123,14 @@
     <script type="text/javascript" src="camera.js"></script>
     <script type="text/javascript" src="model.js"></script>
     <script type="text/javascript" src="sphere.js"></script>
-    <script type="text/javascript" src="player.js"></script>
     <script type="text/javascript" src="controls.js"></script>
-    <script type="text/javascript" src="renderer.js"></script>
     <script type="text/javascript" src="lighting.js"></script>
     <script type="text/javascript" src="textures.js"></script>
     <script type="text/javascript" src="enemies.js"></script>
+    <script type="text/javascript" src="player.js"></script>
     <script type="text/javascript" src="skybox.js"></script>
+    <script type="text/javascript" src="game.js"></script>
+    <script type="text/javascript" src="renderer.js"></script>
     <script type="text/javascript" src="osmos3d-team03.js"></script>
 </head>
 

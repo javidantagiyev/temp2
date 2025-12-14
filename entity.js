@@ -1,10 +1,5 @@
-class Entity{
-    model;
-    score;
-}
 
 
-function collision(entity1, model){
+function createMoteProgram(){
     
-    return true;
 }

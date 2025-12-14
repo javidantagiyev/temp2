@@ -54,6 +54,7 @@ class Model{
         this.worldMatrix = mult(translate(this.position[0], this.position[1], this.position[2]), this.worldMatrix);
     }
 
+
     rotate(x, y, z){
         this.rotateX = (this.rotateX + x) % 360;
         this.rotateY = (this.rotateY + y) % 360;
